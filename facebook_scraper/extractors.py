@@ -101,14 +101,14 @@ class PostExtractor:
             self.extract_likes,
             self.extract_comments,
             self.extract_shares,
-            self.extract_post_url,
-            self.extract_link,
-            self.extract_user_id,
-            self.extract_username,
-            self.extract_video,
-            self.extract_video_thumbnail,
-            self.extract_video_id,
-            self.extract_is_live,
+            # self.extract_post_url,
+            # self.extract_link,
+            # self.extract_user_id,
+            # self.extract_username,
+            # self.extract_video,
+            # self.extract_video_thumbnail,
+            # self.extract_video_id,
+            # self.extract_is_live,
         ]
 
         post = self.make_new_post()
@@ -164,8 +164,13 @@ class PostExtractor:
                 url = utils.urljoin(FB_MOBILE_BASE_URL, match.groups()[0].replace("&amp;", "&"))
                 response = self.request(url)
                 element = response.html.find('.story_body_container', first=True)
-
+                if not element:
+                    element = response.html.find('title', first=True)
         nodes = element.find('p, header, span[role=presentation]')
+        if not nodes:
+            return {
+                'text': element.text[14:-11]
+            }
         if nodes:
             post_text = []
             shared_text = []
