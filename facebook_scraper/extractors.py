@@ -159,6 +159,7 @@ class PostExtractor:
         element = self.element
 
         has_more = self.more_url_regex.search(element.html)
+        logger.debug('has_more? ' + str(has_more))
         if has_more:
             match = self.post_story_regex.search(element.html)
             if match:
