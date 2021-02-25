@@ -10,7 +10,7 @@ from requests_html import HTMLSession
 from . import utils
 from .constants import DEFAULT_PAGE_LIMIT, FB_MOBILE_BASE_URL
 from .extractors import extract_group_post, extract_post
-from .fb_types import Post
+from .fb_types import Post, Page
 from .page_iterators import iter_group_pages, iter_pages
 
 
@@ -26,11 +26,11 @@ class FacebookScraper:
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/76.0.3809.87 Safari/537.36"
     )
-    cookie = 'locale=en_US;'
+    # cookie = 'locale=en_US;'
     default_headers = {
         'User-Agent': user_agent,
         'Accept-Language': 'en-US,en;q=0.5',
-        'cookie': cookie,
+        # 'cookie': cookie,
     }
 
     def __init__(self, session=None, requests_kwargs=None):
@@ -44,6 +44,9 @@ class FacebookScraper:
         self.session = session
         self.requests_kwargs = requests_kwargs
 
+    def get_pages(self, account: str, **kwargs) -> Iterator[Page]:
+        return partial(iter_pages, account=account, request_fn=self.get)
+
     def get_posts(self, account: str, **kwargs) -> Iterator[Post]:
         iter_pages_fn = partial(iter_pages, account=account, request_fn=self.get)
         return self._generic_get_posts(extract_post, iter_pages_fn, **kwargs)
@@ -54,7 +57,9 @@ class FacebookScraper:
 
     def get(self, url, **kwargs):
         try:
+            logger.debug('requesting'+ url)
             response = self.session.get(url=url, **self.requests_kwargs, **kwargs)
+            logger.debug('requested'+ url)
             response.raise_for_status()
             return response
         except RequestException as ex:
@@ -62,22 +67,33 @@ class FacebookScraper:
             raise
 
     def login(self, email: str, password: str):
-        login_page = self.get(self.base_url)
-        login_action = login_page.html.find('#login_form', first=True).attrs.get('action')
+        logger.debug("Logging in")
+        login_page = 'https://mbasic.facebook.com/login/device-based/regular/login/'
+        res = self.session.get(login_page)
+        hids = res.html.find('#login_form > input[name]')
+        data = { h.attrs['name']: h.attrs['value'] for h in hids }
+        data['email'] = email
+        data['pass'] = password
+        data['login'] ='Log In'
+        res2 = self.session.post(login_page, data=data)
+        logger.debug('res2 cookies'+ str(res2.cookies))
+        logger.debug('after login, cookies'+ str(self.session.cookies))
+        # login_page = self.get(self.base_url)
+        # login_action = login_page.html.find('#login_form', first=True).attrs.get('action')
 
-        response = self.session.post(
-            utils.urljoin(self.base_url, login_action), data={'email': email, 'pass': password}
-        )
-        response_text = response.html.find('#viewport', first=True).text
+        # response = self.session.post(
+        #     utils.urljoin(self.base_url, login_action), data={'email': email, 'pass': password}
+        # )
+        # response_text = response.html.find('#viewport', first=True).text
 
-        logger.debug("Login response text: %s", response_text)
+        # logger.debug("Login response text: %s", response_text)
 
-        login_error = response.html.find('#login_error', first=True)
-        if login_error:
-            logger.error("Login error: %s", login_error.text)
+        # login_error = response.html.find('#login_error', first=True)
+        # if login_error:
+        #     logger.error("Login error: %s", login_error.text)
 
-        if 'c_user' not in self.session.cookies:
-            warnings.warn('login unsuccessful')
+        # if 'c_user' not in self.session.cookies:
+        #     warnings.warn('login unsuccessful')
 
     def is_logged_in(self) -> bool:
         response = self.get('https://m.facebook.com/settings')
@@ -102,8 +118,9 @@ class FacebookScraper:
         logger.debug("Starting to iterate pages")
         for i, page in zip(counter, iter_pages_fn()):
             logger.debug("Extracting posts from page %s", i)
-            for post_element in page:
-                post = extract_post_fn(post_element, options=options, request_fn=self.get)
-                if remove_source:
-                    post.pop('source', None)
-                yield post
+            yield page
+            # for post_element in page:
+            #     post = extract_post_fn(post_element, options=options, request_fn=self.get)
+            #     if remove_source:
+            #         post.pop('source', None)
+            #     yield post

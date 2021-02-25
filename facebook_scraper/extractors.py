@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 from json import JSONDecodeError
 from typing import Any, Dict, Optional
+from requests_html import HTML
 
 from . import utils
 from .constants import FB_BASE_URL, FB_MOBILE_BASE_URL
@@ -35,9 +36,9 @@ def extract_group_post(raw_post: RawPost, options: Options, request_fn: RequestF
 class PostExtractor:
     """Class for Extracting fields from a FacebookPost"""
 
-    likes_regex = re.compile(r'like_def[^>]*>([0-9,.]+)')
-    comments_regex = re.compile(r'cmt_def[^>]*>([0-9,.]+)')
-    shares_regex = re.compile(r'([0-9,.]+)\s+Shares', re.IGNORECASE)
+    likes_regex = re.compile(r'([0-9,.]+) left reaction')
+    comments_regex = re.compile(r'([0-9,.]+) comment')
+    shares_regex = re.compile(r'([0-9,.]+)\s+Share', re.IGNORECASE)
     live_regex = re.compile(r'.+(is live).+')
     link_regex = re.compile(r"href=\"https:\/\/lm\.facebook\.com\/l\.php\?u=(.+?)\&amp;h=")
 
@@ -162,15 +163,22 @@ class PostExtractor:
             match = self.post_story_regex.search(element.html)
             if match:
                 url = utils.urljoin(FB_MOBILE_BASE_URL, match.groups()[0].replace("&amp;", "&"))
+                logger.debug('has more, requesting ' + url)
                 response = self.request(url)
+                # logger.debug('Really needs some advice' in response.html.html)
                 element = response.html.find('.story_body_container', first=True)
                 if not element:
-                    element = response.html.find('title', first=True)
+                    # element = response.html.find('title', first=True)
+                    code = response.html.find('.hidden_elem code')[0].html
+                    inner_html = code[code.find('<!--')+4:code.rfind('-->')]
+                    story_div = HTML(html=inner_html)
+                    return {'text': story_div.find('.story_body_container > div', first=True).text }
+
         nodes = element.find('p, header, span[role=presentation]')
-        if not nodes:
-            return {
-                'text': element.text[14:-11]
-            }
+        # if not nodes:
+        #     return {
+        #         'text': element.text[14:-11]
+        #     }
         if nodes:
             post_text = []
             shared_text = []

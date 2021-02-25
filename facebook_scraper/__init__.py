@@ -142,6 +142,7 @@ def write_posts_to_csv(
 
 
 def enable_logging(level=logging.INFO):
+    logging.basicConfig(format='%(asctime)s %(filename)s %(message)s')
     handler = logging.StreamHandler()
     handler.setLevel(level)
 
