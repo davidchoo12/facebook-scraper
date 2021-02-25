@@ -36,8 +36,8 @@ def extract_group_post(raw_post: RawPost, options: Options, request_fn: RequestF
 class PostExtractor:
     """Class for Extracting fields from a FacebookPost"""
 
-    likes_regex = re.compile(r'([0-9,.]+) left reaction')
-    comments_regex = re.compile(r'([0-9,.]+) comment')
+    likes_regex = re.compile(r'like_def[^>]*>([0-9,.]+)')
+    comments_regex = re.compile(r'cmt_def[^>]*>([0-9,.]+)')
     shares_regex = re.compile(r'([0-9,.]+)\s+Share', re.IGNORECASE)
     live_regex = re.compile(r'.+(is live).+')
     link_regex = re.compile(r"href=\"https:\/\/lm\.facebook\.com\/l\.php\?u=(.+?)\&amp;h=")
@@ -193,7 +193,7 @@ class PostExtractor:
                 # Not to be confused with the 'More' that opens the article in a new page
                 if node.tag == 'p':
                     node = utils.make_html_element(
-                        html=node.html.replace('>… <', '><', 1).replace('>More<', '', 1)
+                        html=node.html.replace('>… <', '><', 1).replace('>See More<', '', 1)
                     )
 
                 if not ended:
