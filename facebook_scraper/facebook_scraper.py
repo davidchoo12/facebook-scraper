@@ -23,8 +23,9 @@ class FacebookScraper:
     base_url = FB_MOBILE_BASE_URL
     user_agent = (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/76.0.3809.87 Safari/537.36"
+        # "AppleWebKit/537.36 (KHTML, like Gecko) "
+        # "Chrome/76.0.3809.87 Safari/537.36"
+        "Gecko/20100101 Firefox/86.0"
     )
     # cookie = 'locale=en_US;'
     default_headers = {
@@ -57,9 +58,9 @@ class FacebookScraper:
 
     def get(self, url, **kwargs):
         try:
-            logger.debug('requesting'+ url)
+            # logger.debug('requesting '+ url)
             response = self.session.get(url=url, **self.requests_kwargs, **kwargs)
-            logger.debug('requested'+ url)
+            logger.debug('requested '+ url)
             response.raise_for_status()
             return response
         except RequestException as ex:

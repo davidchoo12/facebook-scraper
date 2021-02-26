@@ -143,13 +143,13 @@ def write_posts_to_csv(
 
 def enable_logging(level=logging.INFO):
     logging.basicConfig(format='%(asctime)s %(filename)s %(message)s')
-    handler = logging.StreamHandler()
-    handler.setLevel(level)
+    # handler = logging.StreamHandler()
+    # handler.setLevel(level)
 
-    logger.addHandler(handler)
+    # logger.addHandler(handler)
     logger.setLevel(level)
 
 
 # Disable logging by default
 logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
+# logger.addHandler(logging.NullHandler())

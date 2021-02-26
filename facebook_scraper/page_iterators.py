@@ -74,22 +74,23 @@ class PageParser:
 
     def get_page(self) -> Page:
         raw_page = self.get_raw_page()
-        raw_posts = raw_page.find('article')
+        raw_posts = raw_page.find('*[data-sigil*="story-div"]')
 
         # retry mechanism added cos sometimes fb's response is inconsistent
-        tries = 3
-        while not raw_posts and tries > 0:
-            tries -= 1
-            logger.warning("No raw posts (<article> elements) were found in this page, retrying...")
+        # tries = 3
+        # while not raw_posts and tries > 0:
+        #     tries -= 1
+        if not raw_posts:
+            logger.warning("No raw posts (<article> elements) were found in this page.")
             if logger.isEnabledFor(logging.DEBUG):
-                content = textwrap.indent(
-                    raw_page.text,
-                    prefix='| ',
-                    predicate=lambda _: True,
-                )
-                sep = '+' + '-' * 60
+                # content = textwrap.indent(
+                #     raw_page.text,
+                #     prefix='| ',
+                #     predicate=lambda _: True,
+                # )
+                # sep = '+' + '-' * 60
                 logger.debug("The page url is: %s", self.response.url)
-                logger.debug("The page content is:\n%s\n%s%s\n", sep, content, sep)
+                logger.debug("The page content is:\n%s\n", raw_page.html)
 
         return raw_posts
 
@@ -110,8 +111,10 @@ class PageParser:
 
     def _parse(self):
         if self.response.text.startswith(self.json_prefix):
+            logger.debug('parse json')
             self._parse_json()
         else:
+            logger.debug('parse html')
             self._parse_html()
 
     def _parse_html(self):
