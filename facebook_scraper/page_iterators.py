@@ -33,10 +33,12 @@ def generic_iter_pages(start_url, page_parser_cls, request_fn: RequestFunction) 
         parser = page_parser_cls(response)
 
         page = parser.get_page()
+        shares = parser.get_shares()
 
         # TODO: If page is actually an iterable calling len(page) might consume it
         logger.debug("Got %s raw posts from page", len(page))
-        yield page
+        logger.debug('shares' + str(shares))
+        yield page, shares
 
         logger.debug("Looking for next page URL")
         next_page = parser.get_next_page()
@@ -62,12 +64,23 @@ class PageParser:
 
         self._parse()
 
+    def get_shares(self):
+        raw_html = self.response.html
+        share_counts = re.findall(r'[^_]share_count.+?(\d+),', raw_html.html)
+        logger.debug('share_counts' + str(share_counts))
+        if not share_counts:
+            logger.debug('raw_html' + raw_html.html)
+        return share_counts
+
     def get_page(self) -> Page:
         raw_page = self.get_raw_page()
         raw_posts = raw_page.find('article')
 
-        if not raw_posts:
-            logger.warning("No raw posts (<article> elements) were found in this page.")
+        # retry mechanism added cos sometimes fb's response is inconsistent
+        tries = 3
+        while not raw_posts and tries > 0:
+            tries -= 1
+            logger.warning("No raw posts (<article> elements) were found in this page, retrying...")
             if logger.isEnabledFor(logging.DEBUG):
                 content = textwrap.indent(
                     raw_page.text,

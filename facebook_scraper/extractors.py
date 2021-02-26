@@ -193,7 +193,7 @@ class PostExtractor:
                 # Not to be confused with the 'More' that opens the article in a new page
                 if node.tag == 'p':
                     node = utils.make_html_element(
-                        html=node.html.replace('>… <', '><', 1).replace('>See More<', '', 1)
+                        html=node.html.replace('>… <', '><', 1).replace('>See More<', '', 1).replace('>More<', '', 1)
                     )
 
                 if not ended:

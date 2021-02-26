@@ -117,7 +117,7 @@ class FacebookScraper:
 
         logger.debug("Starting to iterate pages")
         for i, page in zip(counter, iter_pages_fn()):
-            logger.debug("Extracting posts from page %s", i)
+            # logger.debug("Extracting posts from page %s", i)
             yield page
             # for post_element in page:
             #     post = extract_post_fn(post_element, options=options, request_fn=self.get)
