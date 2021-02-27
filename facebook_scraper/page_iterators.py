@@ -105,7 +105,7 @@ class PageParser:
         match = self.cursor_regex_2.search(self.cursor_blob)
         if match:
             value = match.groups()[0]
-            return value.encode('utf-8').decode('unicode_escape').replace('\\/', '/')
+            return value.encode('utf-8').decode('unicode_escape').replace('\\/', '/').replace('num_to_fetch=4&', 'num_to_fetch=100&')
 
         return None
 
@@ -152,7 +152,7 @@ class GroupPageParser(PageParser):
         match = self.cursor_regex_3.search(self.cursor_blob)
         if match:
             value = match.groups()[0]
-            return value.encode('utf-8').decode('unicode_escape').replace('\\/', '/')
+            return value.encode('utf-8').decode('unicode_escape').replace('\\/', '/').replace('num_to_fetch=4&', 'num_to_fetch=399&')
 
         return None
 
